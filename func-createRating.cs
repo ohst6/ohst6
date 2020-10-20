@@ -3,8 +3,8 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Net.Http;
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
@@ -14,24 +14,12 @@ namespace BFYOC.createRating
 {
     public static class func_createRating
     {
-        public class objRating
-    {
-        public string userId { get; set; }
-        public string productId { get; set; }
-        public string locationName { get; set; }
-        public int rating { get; set; }
-        public string userNotes { get; set; }
-    }
-    public class objStorRating
-    {
-        public string userId { get; set; }
-        public string productId { get; set; }
-        public string locationName { get; set; }
-        public int rating { get; set; }
-        public string userNotes { get; set; }
-        public string guid {get; set;}
-        public string timestamp {get;set;}
-    }
+        private static readonly string _endpointUrl = "https://oh-cosmos-sql.documents.azure.com:443/";                
+        private static readonly string _primaryKey = "ZMoQ00DFFs1O0wsj1kgU10HukOganoCSITH8UGDOr29ngr9UQVLKlbTHwLo8ZeP4AiA57178O23iuV06xySqQA==";
+        private static readonly string _databaseId = "RatingsDB";
+        private static readonly string _containerId = "Ratings";
+        private static CosmosClient cosmosClient = new CosmosClient(_endpointUrl, _primaryKey);
+        
         [FunctionName("func_createRating")]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
@@ -40,7 +28,7 @@ namespace BFYOC.createRating
             log.LogInformation("C# HTTP trigger function processed a request.");
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            objRating objRequest = JsonSerializer.Deserialize<objRating>(requestBody);
+            Rating objRequest = JsonSerializer.Deserialize<Rating>(requestBody);
 
             /* Validate User ID */
             using var clientUID = new HttpClient();
@@ -57,24 +45,22 @@ namespace BFYOC.createRating
             string apiResponsePID = await resultProductID.Content.ReadAsStringAsync();
 
             if (apiResponseUID == "Please pass a valid userId on the query string" || apiResponseUID == "")
-            {
                 return new NotFoundResult();
-            } 
             if (apiResponsePID == "Please pass a valid productId on the query string" || apiResponsePID == "")
-            {
                 return new NotFoundResult();
-            }
-
-            objStorRating currRating = new objStorRating();
-            string g = Guid.NewGuid().ToString();
+            
+            Rating currRating = new Rating();
             string timeStamp = System.DateTime.Today.ToString();
             currRating.locationName = objRequest.locationName;
             currRating.productId = objRequest.productId;
             currRating.rating = objRequest.rating;
             currRating.userId = objRequest.userId;
             currRating.userNotes = objRequest.userNotes;
-            currRating.timestamp = timeStamp;
-            currRating.guid = g;
+            currRating.timeStamp = timeStamp;
+            currRating.id = Guid.NewGuid().ToString();;
+
+            var container = cosmosClient.GetContainer(_databaseId, _containerId);
+            ItemResponse<Rating> wakefieldFamilyResponse = await container.UpsertItemAsync<Rating>(currRating, new PartitionKey(currRating.userId));
 
             string responseMessage = string.IsNullOrEmpty(objRequest.userId)
                 ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
