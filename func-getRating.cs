@@ -8,12 +8,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace BFYOC.getRating
+namespace BFYOC.ohts6
 {
     public static class func_getRating
     {
-        private static readonly string _endpointUrl = "https://oh-cosmos-sql.documents.azure.com:443/";                
-        private static readonly string _primaryKey = "ZMoQ00DFFs1O0wsj1kgU10HukOganoCSITH8UGDOr29ngr9UQVLKlbTHwLo8ZeP4AiA57178O23iuV06xySqQA==";
+        private static readonly string _endpointUrl = System.Environment.GetEnvironmentVariable("endpointUrl");
+        private static readonly string _primaryKey = System.Environment.GetEnvironmentVariable("primaryKey");
         private static readonly string _databaseId = "RatingsDB";
         private static readonly string _containerId = "Ratings";
         private static CosmosClient cosmosClient = new CosmosClient(_endpointUrl, _primaryKey);
@@ -31,16 +31,13 @@ namespace BFYOC.getRating
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
                 // Run query against Cosmos DB
                 var container = cosmosClient.GetContainer(_databaseId, _containerId);
-                //ItemResponse<objRating> wakefieldFamilyResponse = await container.UpsertItemAsync<objRating>(wakefieldFamily, new PartitionKey(wakefieldFamily.LastName));
-                //ItemResponse<Rating> andersenFamilyResponse = await container.ReadItemAsync<Rating>(ratingId, new PartitionKey(andersenFamily.LastName));
-        
+                
                 FeedIterator<dynamic> queryResultSetIterator = container.GetItemQueryIterator<dynamic>(queryDefinition, requestOptions: new QueryRequestOptions());
                 List<dynamic> userRatings = new List<dynamic>();
 
                 while (queryResultSetIterator.HasMoreResults)
                 {
                     FeedResponse<dynamic> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                    //Console.WriteLine("another page");
                     foreach (var item in currentResultSet)
                         userRatings.Add(item);
                 }
