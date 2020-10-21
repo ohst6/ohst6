@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +15,8 @@ namespace BFYOC.ohts6
 {
     public static class func_createRating
     {
-        private static readonly string _endpointUrl = System.Environment.GetEnvironmentVariable("endpointUrl");
-        private static readonly string _primaryKey = System.Environment.GetEnvironmentVariable("primaryKey");
+        private static readonly string _endpointUrl = "https://oh-cosmos-sql.documents.azure.com:443/";
+        private static readonly string _primaryKey = "ZMoQ00DFFs1O0wsj1kgU10HukOganoCSITH8UGDOr29ngr9UQVLKlbTHwLo8ZeP4AiA57178O23iuV06xySqQA==";
         private static readonly string _databaseId = "RatingsDB";
         private static readonly string _containerId = "Ratings";
         private static CosmosClient cosmosClient = new CosmosClient(_endpointUrl, _primaryKey);
@@ -49,6 +50,10 @@ namespace BFYOC.ohts6
 
             if (apiResponsePID == "Please pass a valid productId on the query string" || apiResponsePID == "")
                 return new NotFoundResult();
+
+            string regEx = @"^([0-5]{1})$";
+            if (!Regex.IsMatch(objRequest.rating.ToString(), regEx))
+                return new BadRequestObjectResult(@"Please choose a rating between 0 and 5");
 
             Rating currRating = new Rating();
             currRating.locationName = objRequest.locationName;

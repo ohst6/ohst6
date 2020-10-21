@@ -12,8 +12,8 @@ namespace BFYOC.ohts6
 {
     public static class func_getRating
     {
-        private static readonly string _endpointUrl = System.Environment.GetEnvironmentVariable("endpointUrl");
-        private static readonly string _primaryKey = System.Environment.GetEnvironmentVariable("primaryKey");
+        private static readonly string _endpointUrl = "https://oh-cosmos-sql.documents.azure.com:443/";
+        private static readonly string _primaryKey = "ZMoQ00DFFs1O0wsj1kgU10HukOganoCSITH8UGDOr29ngr9UQVLKlbTHwLo8ZeP4AiA57178O23iuV06xySqQA==";
         private static readonly string _databaseId = "RatingsDB";
         private static readonly string _containerId = "Ratings";
         private static CosmosClient cosmosClient = new CosmosClient(_endpointUrl, _primaryKey);
