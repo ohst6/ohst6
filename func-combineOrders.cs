@@ -66,8 +66,8 @@ namespace BFYOC.ohst6
 
             using var client = new HttpClient();
             var response = client.PostAsync("https://serverlessohmanagementapi.trafficmanager.net/api/order/combineOrderContent", data);
-            
-            var resultsCombined = response.Result.Content.ReadAsStringAsync().Result; 
+
+            var resultsCombined = response.Result.Content.ReadAsStringAsync().Result;
 
         }
     }
